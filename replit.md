@@ -1,90 +1,82 @@
-# Voidxx — A Clothing Store
+# Voidxx — Premium Clothing Store
 
-A polished PHP e-commerce demo with a public storefront, customer accounts with full order history, and an admin back-office that can manage products, customers, and orders.
+A Node.js + Express e-commerce site with a hand-rolled premium UI in plain HTML/CSS/JavaScript. SQLite via better-sqlite3 for persistence.
+
+## Run
+
+```
+npm start          # starts node server.js on 0.0.0.0:5000
+```
+
+The "Start application" workflow runs `node server.js`.
 
 ## Stack
 
-- **Language:** PHP 8.2 (no Composer dependencies; only standard PDO extensions)
-- **Database:** SQLite (file: `data/store.sqlite`) via PDO
-  - Originally targeted MySQL. Switched to SQLite so the app runs out of the box on Replit. All SQL is portable.
-- **Server (dev & prod):** PHP built-in web server, bound to `0.0.0.0:5000`
-- **Frontend:** Server-rendered PHP templates, custom CSS, Inter + Playfair Display from Google Fonts.
+- **Runtime:** Node.js 20 (ES modules — `"type": "module"` in package.json)
+- **Server:** Express 5 with `express-session`, `multer` (image uploads), `bcryptjs` (password hashing)
+- **Database:** SQLite (better-sqlite3) — file at `data/store.sqlite`
+- **Frontend:** Static HTML files in `/public`, vanilla CSS in `/public/css/styles.css`, vanilla JS in `/public/js/`. No build step.
+- **Fonts:** Google Fonts — Fraunces (display serif) + Inter (UI sans)
 
-## Features
-
-### Storefront (public)
-- Hero homepage with new arrivals and best-deal sections
-- Shop page with category filter
-- Product detail page with competitor pricing & savings
-- Side-by-side product comparison
-- Sessions-backed shopping cart (add / increment / decrement / remove / clear)
-- Contact form
-
-### User accounts
-- Register, login, logout
-- `account.php` — profile + lifetime stats
-- `orders.php` — full order history showing status, items, totals
-- Checkout from cart creates an order assigned to the signed-in user
-
-### Admin portal (`/admin/`)
-- Separate admin login (session key isolated from customer sessions)
-- Sidebar layout for: Dashboard, Products, Users, Orders
-- **Product CRUD** — add, edit (with image upload), delete
-- **Customer list** — see every registered user with order count and lifetime spend
-- **Order management** — view every order with line items; change status (Processing / Shipped / Delivered / Cancelled)
-- **Add order to a user** — admin can compose a multi-item order on behalf of any customer; the order shows up in that user's history with a "Placed by admin" badge
-
-## Default Credentials
-
-| Role     | URL                  | Username | Password   |
-|----------|----------------------|----------|------------|
-| Admin    | `/admin/login.php`   | `Voidxx` | `admin123` |
-| Customer | `/login.php`         | `demo`   | `demo1234` |
-
-Created automatically on first run by `db.php`.
-
-## Project Layout
+## Project layout
 
 ```
-.
-├── index.php              # Home (hero + featured)
-├── products.php           # Shop with category filter
-├── product.php            # Product detail
-├── compare.php            # Side-by-side compare
-├── cart.php               # Cart + checkout
-├── contact.php
-├── login.php / register.php / logout.php / account.php / orders.php
-├── header.php / footer.php
-├── _helpers.php           # Sessions, flash, current_user(), formatting
-├── config.php             # Constants (DB + BASE_URL)
-├── db.php                 # SQLite connection + auto-migrate + seed
-├── styles.css             # Full design system
-├── assets/placeholder.svg # Fallback product image
-├── uploads/               # Admin-uploaded product images
-├── data/store.sqlite      # SQLite DB (auto-created)
-└── admin/
-    ├── _auth.php          # Admin session guard
-    ├── _layout.php        # Sidebar shell wrapper
-    ├── _layout_end.php
-    ├── login.php / logout.php
-    ├── dashboard.php      # Stats + recent orders
-    ├── products.php / add_product.php / edit_product.php / delete_product.php
-    ├── users.php          # Customer list
-    ├── orders.php         # All orders + status updates
-    └── add_order.php      # Compose an order for a user
+server.js                 # Express app, all routes & APIs
+db.js                     # SQLite init + schema + seed
+package.json              # type: module, start: node server.js
+data/store.sqlite         # SQLite database file (gitignored)
+uploads/                  # User-uploaded product images (gitignored)
+public/
+  css/styles.css          # Full design system
+  js/app.js               # Shared header/footer/cart logic for every page
+  js/admin.js             # Admin sidebar + auth guard
+  index.html              # Home (hero + new + deals + features + editorial split)
+  products.html           # Catalog with category filter chips
+  product.html            # PDP (uses ?id=)
+  cart.html               # Bag with qty controls + checkout
+  login.html, register.html, account.html, orders.html
+  contact.html, 404.html
+  admin/login.html         # Separate admin sign-in
+  admin/dashboard.html     # Stats + recent orders
+  admin/products.html      # Catalog CRUD with image upload
+  admin/users.html         # Customer list with order count + lifetime spend
+  admin/orders.html        # All orders + status dropdown
+  admin/add-order.html     # Compose an order on behalf of a user
 ```
 
-## Database Schema (SQLite)
+Every page uses two slots — `<div id="header-slot"></div>` and `<div id="footer-slot"></div>`. `app.js` fetches `/api/me`, injects the header/footer, and dispatches an `app-ready` CustomEvent so per-page scripts can render once auth state is known.
 
-- `products`(id, name, description, price, competitor_price, image, category, stock, created_at)
-- `admins`(id, username, password_hash, created_at)
-- `users`(id, username, email, password_hash, full_name, created_at)
-- `orders`(id, user_id, total, status, note, placed_by, created_at)
-- `order_items`(id, order_id, product_id, product_name, unit_price, quantity)
+## Default credentials
 
-`db.php` uses `CREATE TABLE IF NOT EXISTS` and seeds only when tables are empty, so it is idempotent.
+- **Customer:** `demo` / `demo1234`
+- **Admin:** `Voidxx` / `admin123`
 
-## Workflow & Deployment
+The seed runs only when the relevant table is empty, so you can safely re-run.
 
-- Workflow `Start application` runs `php -S 0.0.0.0:5000 -t .` on port 5000 (webview).
-- Deployment configured as `vm` with the same command — VM was chosen because the app keeps state on the local disk (`data/store.sqlite` and `uploads/`).
+## Database schema
+
+- `products` — id, name, description, price, competitor_price, image, category, stock, created_at
+- `admins` — id, username, password_hash
+- `users` — id, username (unique), email (unique), password_hash, full_name, created_at
+- `orders` — id, user_id (FK), total, status, note, placed_by ('user' | 'admin'), created_at
+- `order_items` — id, order_id (FK), product_id, product_name, unit_price, quantity
+
+## API surface
+
+- **Public:** `/api/me`, `/api/products`, `/api/products/featured`, `/api/products/:id`
+- **Auth:** `/api/auth/register`, `/api/auth/login`, `/api/auth/logout`
+- **Cart (session):** `/api/cart`, `/api/cart/add`, `/api/cart/update`, `/api/cart/remove`, `/api/cart/clear`
+- **Orders:** `POST /api/orders/checkout`, `GET /api/orders` (current user)
+- **Admin auth:** `/api/admin/login`, `/api/admin/logout`
+- **Admin:** `/api/admin/stats`, `/api/admin/users`, `/api/admin/orders` (GET/POST/PATCH), `/api/admin/products` (POST/PATCH/DELETE)
+
+## Deployment
+
+Deployment target is `vm` running `node server.js` (chosen for persistent in-process sessions and the on-disk SQLite file).
+
+## Notes
+
+- Customer and admin sessions are independent fields on the same session (`req.session.userId` vs `req.session.adminId`), so an admin signed-in won't be confused with a customer.
+- Orders placed by an admin on behalf of a user are flagged with `placed_by = 'admin'` and surface a "Placed by admin" badge on the customer's order history.
+- Product images: store either an absolute URL (for stock photos) or a `/uploads/...` path (for admin-uploaded images). The frontend has an SVG fallback if a URL fails to load.
+- Dev cache is disabled via response headers when `NODE_ENV !== 'production'`.

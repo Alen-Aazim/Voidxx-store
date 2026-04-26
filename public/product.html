@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="product-detail" id="pdRoot">
+    <div class="muted">Loading…</div>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+let qty = 1;
+
+function render(p) {
+  const save = (p.competitor_price && p.competitor_price > p.price) ? p.competitor_price - p.price : 0;
+  document.getElementById('pdRoot').innerHTML = `
+    <div class="pd-thumb">${img(p.image, p.name)}</div>
+    <div class="pd-info">
+      <div class="crumb"><a href="/products">Shop</a> · ${escapeHtml(p.category)}</div>
+      <h1>${escapeHtml(p.name)}</h1>
+      <div class="pd-price">
+        <span class="price">${fmt(p.price)}</span>
+        ${p.competitor_price ? `<span class="strike">${fmt(p.competitor_price)}</span>` : ''}
+        ${save > 0 ? `<span class="save">Save ${fmt(save)}</span>` : ''}
+      </div>
+      <p>${escapeHtml(p.description)}</p>
+      <div class="pd-meta">
+        <div><strong>Category</strong> ${escapeHtml(p.category)}</div>
+        <div><strong>Stock</strong> ${p.stock} units available</div>
+        <div><strong>Added</strong> ${new Date(p.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric'})}</div>
+      </div>
+      <div class="qty-row">
+        <span class="tiny">Quantity</span>
+        <div class="qty-pick">
+          <button id="qtyDown">−</button>
+          <span id="qtyShow">1</span>
+          <button id="qtyUp">+</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-accent" id="addBtn">Add to bag</button>
+        <a class="btn btn-outline" href="/products">Keep shopping</a>
+      </div>
+    </div>`;
+  document.getElementById('qtyUp').onclick   = () => { qty++; document.getElementById('qtyShow').textContent = qty; };
+  document.getElementById('qtyDown').onclick = () => { qty = Math.max(1, qty - 1); document.getElementById('qtyShow').textContent = qty; };
+  document.getElementById('addBtn').onclick  = async () => {
+    try {
+      let last;
+      for (let i = 0; i < qty; i++) {
+        last = await api('/api/cart/add', { method: 'POST', body: JSON.stringify({ productId: p.id }) });
+      }
+      document.getElementById('cartCount').textContent = last.count;
+      toast(`Added ${qty} × ${p.name}`, 'success');
+    } catch (e) { toast(e.message, 'error'); }
+  };
+}
+
+document.addEventListener('app-ready', async () => {
+  const id = new URL(location.href).searchParams.get('id');
+  if (!id) return location.href = '/products';
+  try {
+    const p = await api('/api/products/' + id);
+    document.title = p.name + ' — Voidxx';
+    render(p);
+  } catch (e) {
+    document.getElementById('pdRoot').innerHTML = `<p class="muted">${e.message}. <a href="/products">Back to shop</a></p>`;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voidxx — Premium Clothing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230c0c0d'/><text x='16' y='22' font-family='Georgia' font-size='16' fill='%23b8895a' text-anchor='middle'>V</text></svg>">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<section class="hero">
+  <div class="container">
+    <div>
+      <div class="hero-eyebrow">— Spring Collection 2026</div>
+      <h1>The pieces<br>you'll <em>actually</em> wear.</h1>
+      <p class="lede">Considered, premium clothing made from honest materials. Designed to outlast the trends, priced without the markup.</p>
+      <div class="hero-cta">
+        <a class="btn btn-accent" href="/products">Shop the collection <span class="arrow">→</span></a>
+        <a class="btn btn-outline" href="/products?cat=Outerwear">Outerwear</a>
+      </div>
+    </div>
+    <div class="hero-figure">
+      <div class="hero-tag">
+        <strong>Camel Wool Overcoat</strong>
+        <span class="muted small">From ₹5,999 · See in shop</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— 01 New Arrivals</span>
+        <h2>This week's drop</h2>
+      </div>
+      <a class="link" href="/products">View everything →</a>
+    </div>
+    <div class="grid" id="newArrivals"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="split">
+      <div class="img" style="background-image:linear-gradient(180deg, rgba(0,0,0,.0) 50%, rgba(0,0,0,.3)), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80');"></div>
+      <div class="body">
+        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— Crafted for longevity</span>
+        <h2>Built once.<br>Worn for years.</h2>
+        <p>We work directly with mills and makers to source materials that age beautifully — and we skip the seasonal markups so you don't pay for them either.</p>
+        <a class="btn btn-outline" href="/products">Browse the catalog <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div>
+        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— 02 Best Value</span>
+        <h2>Deals worth a closer look</h2>
+      </div>
+      <a class="link" href="/products">Shop all →</a>
+    </div>
+    <div class="grid" id="dealGrid"></div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0;">
+  <div class="container">
+    <div class="feature-row">
+      <div class="feature">
+        <div class="icon">— I.</div>
+        <h4>Premium materials</h4>
+        <p>Italian wool, European linen, Japanese denim. We obsess over fabric so every piece feels right from day one.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">— II.</div>
+        <h4>Honest pricing</h4>
+        <p>We list competitor prices side-by-side. No phantom discounts, just genuinely better value.</p>
+      </div>
+      <div class="feature">
+        <div class="icon">— III.</div>
+        <h4>Make it personal</h4>
+        <p>Sign in to track orders, save favourites, and check out faster on every visit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+document.addEventListener('app-ready', async () => {
+  const data = await api('/api/products/featured');
+  document.getElementById('newArrivals').innerHTML = data.newest.map(p => productCardHtml(p, { newTag: true })).join('');
+  document.getElementById('dealGrid').innerHTML   = data.deals.map(p => productCardHtml(p)).join('');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customers — Voidxx Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="admin-shell">
+    <div id="admin-side-slot"></div>
+    <section>
+      <div class="page-intro" style="text-align:left;padding-top:0;">
+        <span class="crumb">— Customers</span>
+        <h1>Customers</h1>
+        <p class="muted">Everyone who's signed up to Voidxx.</p>
+      </div>
+      <div id="usersArea"></div>
+    </section>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script src="/js/admin.js"></script>
+<script>
+document.addEventListener('app-ready', async (e) => {
+  if (!e.detail?.admin) return;
+  const users = await api('/api/admin/users');
+  if (!users.length) {
+    document.getElementById('usersArea').innerHTML = '<div class="card"><p class="muted">No customers yet.</p></div>';
+    return;
+  }
+  document.getElementById('usersArea').innerHTML = `
+    <table class="table">
+      <thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Orders</th><th>Lifetime</th><th>Joined</th><th></th></tr></thead>
+      <tbody>
+        ${users.map(u => `
+          <tr>
+            <td><strong>${escapeHtml(u.username)}</strong></td>
+            <td>${escapeHtml(u.full_name || '—')}</td>
+            <td class="muted small">${escapeHtml(u.email)}</td>
+            <td>${u.order_count}</td>
+            <td>${fmt(u.lifetime)}</td>
+            <td class="muted small">${new Date(u.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}</td>
+            <td class="right"><a class="btn btn-sm btn-ghost" href="/admin/add-order?user_id=${u.id}">+ Add order</a></td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+});
+</script>
+</body>
+</html>

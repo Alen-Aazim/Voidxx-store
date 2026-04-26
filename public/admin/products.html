@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Products — Voidxx Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="admin-shell">
+    <div id="admin-side-slot"></div>
+    <section>
+      <div class="page-intro" style="text-align:left;padding-top:0;display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:14px;">
+        <div>
+          <span class="crumb">— Catalog</span>
+          <h1>Products</h1>
+          <p class="muted">Manage your catalog.</p>
+        </div>
+        <button class="btn btn-accent" id="newBtn">+ New product</button>
+      </div>
+
+      <div id="formArea" style="display:none;margin-bottom:24px;"></div>
+      <div id="tableArea"></div>
+    </section>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script src="/js/admin.js"></script>
+<script>
+let editingId = null;
+
+function productForm(p = {}) {
+  return `
+    <form class="card" id="pForm">
+      <h3 class="serif" style="font-weight:400;font-size:1.4rem;">${p.id ? 'Edit product' : 'New product'}</h3>
+      <div class="field">
+        <label class="label">Name</label>
+        <input class="input" name="name" value="${escapeHtml(p.name || '')}" required>
+      </div>
+      <div class="field">
+        <label class="label">Description</label>
+        <textarea class="textarea" name="description">${escapeHtml(p.description || '')}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div class="field"><label class="label">Price (₹)</label><input class="input" type="number" step="0.01" name="price" value="${p.price ?? ''}" required></div>
+        <div class="field"><label class="label">Competitor price (₹)</label><input class="input" type="number" step="0.01" name="competitor_price" value="${p.competitor_price ?? ''}"></div>
+        <div class="field"><label class="label">Category</label><input class="input" name="category" value="${escapeHtml(p.category || '')}" placeholder="e.g. Outerwear"></div>
+        <div class="field"><label class="label">Stock</label><input class="input" type="number" name="stock" value="${p.stock ?? 50}"></div>
+      </div>
+      <div class="field">
+        <label class="label">Image URL (or upload below)</label>
+        <input class="input" name="image_url" value="${escapeHtml(p.image && p.image.startsWith('http') ? p.image : '')}" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label class="label">Upload image</label>
+        <input class="input" type="file" name="image" accept="image/*">
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-accent" type="submit">${p.id ? 'Save changes' : 'Create product'}</button>
+        <button class="btn btn-ghost" type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>`;
+}
+
+async function refresh() {
+  const items = await api('/api/products');
+  document.getElementById('tableArea').innerHTML = `
+    <table class="table">
+      <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Was</th><th>Stock</th><th></th></tr></thead>
+      <tbody>
+        ${items.map(p => `
+          <tr>
+            <td><div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:var(--bg-2);">${img(p.image, p.name)}</div></td>
+            <td><strong>${escapeHtml(p.name)}</strong></td>
+            <td class="muted small">${escapeHtml(p.category)}</td>
+            <td>${fmt(p.price)}</td>
+            <td class="muted">${p.competitor_price ? fmt(p.competitor_price) : '—'}</td>
+            <td>${p.stock}</td>
+            <td class="right">
+              <button class="btn btn-sm btn-ghost" data-edit="${p.id}">Edit</button>
+              <button class="btn btn-sm btn-ghost" data-del="${p.id}" style="color:var(--error);">Delete</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+document.addEventListener('click', async (e) => {
+  if (e.target.id === 'newBtn') {
+    editingId = null;
+    document.getElementById('formArea').innerHTML = productForm();
+    document.getElementById('formArea').style.display = 'block';
+  }
+  if (e.target.id === 'cancelBtn') {
+    document.getElementById('formArea').style.display = 'none';
+    editingId = null;
+  }
+  const ed = e.target.closest('[data-edit]');
+  if (ed) {
+    editingId = Number(ed.dataset.edit);
+    const p = await api('/api/products/' + editingId);
+    document.getElementById('formArea').innerHTML = productForm(p);
+    document.getElementById('formArea').style.display = 'block';
+    document.getElementById('formArea').scrollIntoView({ behavior: 'smooth' });
+  }
+  const dl = e.target.closest('[data-del]');
+  if (dl && confirm('Delete this product?')) {
+    await api('/api/admin/products/' + dl.dataset.del, { method: 'DELETE' });
+    refresh();
+    toast('Product deleted');
+  }
+});
+
+document.addEventListener('submit', async (e) => {
+  if (e.target.id !== 'pForm') return;
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const url = editingId ? '/api/admin/products/' + editingId : '/api/admin/products';
+  const method = editingId ? 'PATCH' : 'POST';
+  try {
+    await fetch(url, { method, body: fd, credentials: 'same-origin' }).then(async r => { if (!r.ok) throw new Error((await r.json()).error || 'Failed'); });
+    document.getElementById('formArea').style.display = 'none';
+    editingId = null;
+    toast('Saved', 'success');
+    refresh();
+  } catch (err) { toast(err.message, 'error'); }
+});
+
+document.addEventListener('app-ready', (e) => { if (e.detail?.admin) refresh(); });
+</script>
+</body>
+</html>

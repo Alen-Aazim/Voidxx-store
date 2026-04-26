@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Sign in — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="card form-card dark">
+    <span class="serif" style="font-style:italic;color:var(--accent);">— Admin portal</span>
+    <h2>Restricted area</h2>
+    <p style="color:rgba(246,243,236,.7);">Authorised personnel only.</p>
+    <div id="err" class="error-text" style="display:none;"></div>
+    <form id="adminLoginForm">
+      <div class="field">
+        <label class="label" style="color:rgba(246,243,236,.6);">Username</label>
+        <input class="input" name="username" required autofocus autocomplete="username">
+      </div>
+      <div class="field">
+        <label class="label" style="color:rgba(246,243,236,.6);">Password</label>
+        <input class="input" type="password" name="password" required autocomplete="current-password">
+      </div>
+      <button class="btn btn-accent btn-block" type="submit">Sign in</button>
+    </form>
+    <p class="muted-note small" style="color:rgba(246,243,236,.5);">Default: <code style="background:rgba(246,243,236,.1);color:var(--bg);">Voidxx</code> / <code style="background:rgba(246,243,236,.1);color:var(--bg);">admin123</code></p>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await api('/api/admin/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(new FormData(e.target))) });
+    location.href = '/admin/dashboard';
+  } catch (err) {
+    const el = document.getElementById('err'); el.textContent = err.message; el.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>

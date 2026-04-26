@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Voidxx Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="admin-shell">
+    <div id="admin-side-slot"></div>
+    <section>
+      <div class="page-intro" style="text-align:left;padding-top:0;">
+        <span class="crumb">— Admin</span>
+        <h1>Dashboard</h1>
+        <p class="muted">Live snapshot of your store.</p>
+      </div>
+      <div class="stat-grid" id="stats"></div>
+      <div class="section-head" style="margin-top:0;"><h2 style="font-size:1.4rem;">Recent orders</h2><a class="link" href="/admin/orders">View all →</a></div>
+      <div id="recentArea"></div>
+    </section>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script src="/js/admin.js"></script>
+<script>
+document.addEventListener('app-ready', async (e) => {
+  if (!e.detail?.admin) return;
+  const s = await api('/api/admin/stats');
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${s.products}</div><div class="lbl">Products</div></div>
+    <div class="stat"><div class="num">${s.users}</div><div class="lbl">Customers</div></div>
+    <div class="stat"><div class="num">${s.orders}</div><div class="lbl">Orders</div></div>
+    <div class="stat"><div class="num">${fmt(s.revenue)}</div><div class="lbl">Revenue</div></div>`;
+  document.getElementById('recentArea').innerHTML = s.recent.length ? `
+    <table class="table">
+      <thead><tr><th>#</th><th>Customer</th><th>Total</th><th>Status</th><th>Placed</th><th>When</th></tr></thead>
+      <tbody>
+        ${s.recent.map(o => `
+          <tr>
+            <td>#${o.id}</td>
+            <td>${escapeHtml(o.username)}</td>
+            <td>${fmt(o.total)}</td>
+            <td><span class="badge ${o.status.toLowerCase()}">${o.status}</span></td>
+            <td><span class="badge info">${o.placed_by}</span></td>
+            <td class="muted small">${new Date(o.created_at).toLocaleString('en-GB', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>` : '<div class="card"><p class="muted">No orders yet.</p></div>';
+});
+</script>
+</body>
+</html>

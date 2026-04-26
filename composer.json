@@ -1,9 +1,0 @@
-{
-  "name": "voidxx/store",
-  "description": "Voidxx Clothing Store",
-  "require": {
-    "php": ">=8.0",
-    "ext-pdo": "*",
-    "ext-pdo_mysql": "*"
-  }
-}

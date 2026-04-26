@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Account — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="page-intro" style="text-align:left;">
+    <span class="crumb">— Your account</span>
+    <h1 id="hello">Hi.</h1>
+    <p class="muted" id="email"></p>
+  </div>
+
+  <div class="stat-grid" id="stats"></div>
+
+  <div class="card">
+    <h3 class="serif" style="font-weight:400;font-size:1.4rem;">Quick links</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+      <a class="btn" href="/orders">View order history</a>
+      <a class="btn btn-outline" href="/products">Continue shopping</a>
+      <a class="btn btn-ghost" href="#" id="logoutBtn">Sign out</a>
+    </div>
+  </div>
+</div>
+
+<div id="footer-slot" style="margin-top:80px;"></div>
+<script src="/js/app.js"></script>
+<script>
+document.addEventListener('app-ready', async (e) => {
+  if (!e.detail?.user) return location.href = '/login?next=/account';
+  const u = e.detail.user;
+  document.getElementById('hello').innerHTML = `Hi, <em style="font-style:italic;color:var(--accent-deep);">${escapeHtml((u.full_name || u.username).split(' ')[0])}</em>.`;
+  document.getElementById('email').textContent = u.email;
+  const orders = await api('/api/orders');
+  const total = orders.reduce((s, o) => s + Number(o.total), 0);
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${orders.length}</div><div class="lbl">Orders</div></div>
+    <div class="stat"><div class="num">${fmt(total)}</div><div class="lbl">Lifetime spend</div></div>
+    <div class="stat"><div class="num" style="font-size:1rem;">${escapeHtml(u.username)}</div><div class="lbl">Username</div></div>
+    <div class="stat"><div class="num" style="font-size:1rem;">${escapeHtml(u.email)}</div><div class="lbl">Email</div></div>`;
+});
+document.getElementById('logoutBtn').onclick = async (e) => {
+  e.preventDefault();
+  await api('/api/auth/logout', { method: 'POST' });
+  location.href = '/';
+};
+</script>
+</body>
+</html>

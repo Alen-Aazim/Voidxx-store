@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="page-intro">
+    <span class="crumb">— Get in touch</span>
+    <h1>We read every message</h1>
+    <p>Questions about an order, a fit, or just want to say hi? Drop us a line and someone real will reply.</p>
+  </div>
+
+  <form class="card form-card" id="contactForm">
+    <div class="field">
+      <label class="label">Your name</label>
+      <input class="input" name="name" required>
+    </div>
+    <div class="field">
+      <label class="label">Email</label>
+      <input class="input" type="email" name="email" required>
+    </div>
+    <div class="field">
+      <label class="label">Message</label>
+      <textarea class="textarea" name="msg" required></textarea>
+    </div>
+    <button class="btn btn-accent btn-block" type="submit">Send message</button>
+  </form>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+document.getElementById('contactForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  toast('Thanks — we\'ll be in touch.', 'success');
+  e.target.reset();
+});
+</script>
+</body>
+</html>

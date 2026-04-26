@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Bag — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="page-intro">
+    <span class="crumb">— Your Bag</span>
+    <h1>Cart</h1>
+    <p id="cartSummary" class="muted">Loading your bag…</p>
+  </div>
+  <div id="cartArea"></div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+async function refresh() {
+  const data = await api('/api/cart');
+  document.getElementById('cartCount').textContent = data.count;
+  document.getElementById('cartSummary').textContent = data.count
+    ? `${data.count} item${data.count === 1 ? '' : 's'} in your bag.`
+    : 'Your bag is empty.';
+
+  if (!data.items.length) {
+    document.getElementById('cartArea').innerHTML = `
+      <div class="card cart-empty">
+        <h2>Nothing here yet</h2>
+        <p>Browse the shop and add a few favourites.</p>
+        <a class="btn btn-accent" href="/products">Start shopping</a>
+      </div>`;
+    return;
+  }
+
+  const list = data.items.map(({ product: p, qty, line }) => `
+    <div class="cart-item" data-id="${p.id}">
+      <a class="ci-img" href="/product?id=${p.id}">${img(p.image, p.name)}</a>
+      <div>
+        <div class="ci-meta">${escapeHtml(p.category)}</div>
+        <h4><a href="/product?id=${p.id}">${escapeHtml(p.name)}</a></h4>
+        <div class="ci-price">${fmt(p.price)}</div>
+        <div class="qty-row">
+          <div class="qty-pick">
+            <button data-act="dec" data-id="${p.id}">−</button>
+            <span>${qty}</span>
+            <button data-act="inc" data-id="${p.id}">+</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" data-act="rm" data-id="${p.id}">Remove</button>
+        </div>
+      </div>
+      <div style="text-align:right;font-weight:600;">${fmt(line)}</div>
+    </div>`).join('');
+
+  document.getElementById('cartArea').innerHTML = `
+    <div class="cart-grid">
+      <div class="cart-list">${list}</div>
+      <aside class="cart-side">
+        <h3 class="serif" style="font-weight:400;font-size:1.4rem;">Order summary</h3>
+        <div class="row"><span>Subtotal</span><span>${fmt(data.total)}</span></div>
+        <div class="row"><span>Shipping</span><span class="muted">Calculated at next step</span></div>
+        <div class="row total"><span>Total</span><span>${fmt(data.total)}</span></div>
+        <button class="btn btn-accent" id="checkoutBtn">${window.__me?.user ? 'Place order' : 'Sign in to checkout'} <span class="arrow">→</span></button>
+        <button class="btn btn-ghost" id="clearBtn" style="margin-top:10px;">Clear bag</button>
+      </aside>
+    </div>`;
+}
+
+document.addEventListener('click', async (e) => {
+  const t = e.target;
+  if (t.matches('[data-act="inc"]')) {
+    const id = t.dataset.id;
+    const cur = Number(t.parentElement.querySelector('span').textContent);
+    await api('/api/cart/update', { method: 'POST', body: JSON.stringify({ productId: Number(id), qty: cur + 1 }) });
+    refresh();
+  }
+  if (t.matches('[data-act="dec"]')) {
+    const id = t.dataset.id;
+    const cur = Number(t.parentElement.querySelector('span').textContent);
+    await api('/api/cart/update', { method: 'POST', body: JSON.stringify({ productId: Number(id), qty: Math.max(0, cur - 1) }) });
+    refresh();
+  }
+  if (t.matches('[data-act="rm"]')) {
+    await api('/api/cart/remove', { method: 'POST', body: JSON.stringify({ productId: Number(t.dataset.id) }) });
+    refresh();
+  }
+  if (t.id === 'clearBtn') {
+    await api('/api/cart/clear', { method: 'POST' });
+    refresh();
+  }
+  if (t.id === 'checkoutBtn' || t.parentElement?.id === 'checkoutBtn') {
+    if (!window.__me?.user) { location.href = '/login?next=/cart'; return; }
+    try {
+      const r = await api('/api/orders/checkout', { method: 'POST' });
+      toast('Order #' + r.orderId + ' placed!', 'success');
+      setTimeout(() => location.href = '/orders', 600);
+    } catch (e) { toast(e.message, 'error'); }
+  }
+});
+
+document.addEventListener('app-ready', refresh);
+</script>
+</body>
+</html>

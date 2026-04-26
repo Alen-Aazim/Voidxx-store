@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add Order — Voidxx Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="admin-shell">
+    <div id="admin-side-slot"></div>
+    <section>
+      <div class="page-intro" style="text-align:left;padding-top:0;">
+        <span class="crumb">— Compose</span>
+        <h1>Add order to a customer</h1>
+        <p class="muted">Place an order on behalf of a user. It will appear in their order history immediately.</p>
+      </div>
+
+      <form class="card" id="orderForm">
+        <div class="compose-grid">
+          <div>
+            <div class="field">
+              <label class="label">Customer</label>
+              <select class="select" name="user_id" id="userSel" required>
+                <option value="">— Select customer —</option>
+              </select>
+            </div>
+
+            <label class="label">Items</label>
+            <div id="lines"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="addLineBtn">+ Add another item</button>
+          </div>
+
+          <div>
+            <div class="field">
+              <label class="label">Status</label>
+              <select class="select" name="status">
+                <option>Processing</option><option>Shipped</option><option>Delivered</option><option>Cancelled</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label">Internal note (optional)</label>
+              <textarea class="textarea" name="note" placeholder="Manual entry, in-store purchase, etc."></textarea>
+            </div>
+            <div class="card" style="background:var(--bg-2);border-style:dashed;">
+              <strong>Live total</strong>
+              <div id="totalShow" style="margin-top:6px;font-size:1.4rem;font-family:var(--serif);">₹0</div>
+              <p class="small muted" style="margin:8px 0 0;">Computed from current product prices.</p>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:10px;">
+          <button class="btn btn-accent" type="submit">Save order to customer</button>
+          <a class="btn btn-ghost" href="/admin/users">Cancel</a>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script src="/js/admin.js"></script>
+<script>
+let products = [], idx = 0;
+
+function lineRow(i) {
+  const opts = products.map(p => `<option value="${p.id}" data-price="${p.price}">${escapeHtml(p.name)} — ${fmt(p.price)}</option>`).join('');
+  const div = document.createElement('div');
+  div.className = 'line-row';
+  div.innerHTML = `
+    <select class="select" name="product_id" required><option value="">— Choose product —</option>${opts}</select>
+    <input class="input" type="number" min="1" value="1" name="qty">
+    <button type="button" class="btn btn-ghost btn-sm" onclick="this.parentNode.remove();updateTotal();">×</button>`;
+  div.addEventListener('change', updateTotal);
+  div.addEventListener('input', updateTotal);
+  return div;
+}
+
+function updateTotal() {
+  let t = 0;
+  document.querySelectorAll('#lines .line-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const qty = Number(row.querySelector('input').value) || 0;
+    const p = products.find(p => p.id === Number(sel.value));
+    if (p) t += p.price * qty;
+  });
+  document.getElementById('totalShow').textContent = fmt(t);
+}
+
+document.getElementById('addLineBtn').onclick = () => {
+  document.getElementById('lines').appendChild(lineRow(++idx));
+  updateTotal();
+};
+
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const user_id = document.getElementById('userSel').value;
+  const status  = e.target.status.value;
+  const note    = e.target.note.value;
+  const items   = [...document.querySelectorAll('#lines .line-row')].map(row => ({
+    product_id: Number(row.querySelector('select').value),
+    qty: Number(row.querySelector('input').value)
+  })).filter(i => i.product_id && i.qty > 0);
+  try {
+    const r = await api('/api/admin/orders', { method: 'POST', body: JSON.stringify({ user_id, status, note, items }) });
+    toast('Order #' + r.orderId + ' added', 'success');
+    setTimeout(() => location.href = '/admin/orders', 600);
+  } catch (err) { toast(err.message, 'error'); }
+});
+
+document.addEventListener('app-ready', async (e) => {
+  if (!e.detail?.admin) return;
+  const [users, prods] = await Promise.all([
+    api('/api/admin/users'),
+    api('/api/products')
+  ]);
+  products = prods;
+  const sel = document.getElementById('userSel');
+  const pre = new URL(location.href).searchParams.get('user_id');
+  users.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u.id;
+    opt.textContent = `${u.username} · ${u.email}${u.full_name ? ' (' + u.full_name + ')' : ''}`;
+    if (pre && Number(pre) === u.id) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  document.getElementById('lines').appendChild(lineRow(idx));
+});
+</script>
+</body>
+</html>

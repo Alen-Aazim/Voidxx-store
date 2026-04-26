@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in — Voidxx</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div id="header-slot"></div>
+
+<div class="container">
+  <div class="auth-split">
+    <div class="card">
+      <span class="crumb serif" style="font-style:italic;color:var(--accent-deep);">— Member sign in</span>
+      <h2>Welcome back</h2>
+      <p class="muted small">Sign in to view your orders and check out faster.</p>
+      <div id="err" class="error-text" style="display:none;"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label class="label">Username or email</label>
+          <input class="input" name="username" required autofocus>
+        </div>
+        <div class="field">
+          <label class="label">Password</label>
+          <input class="input" type="password" name="password" required>
+        </div>
+        <button class="btn btn-accent btn-block" type="submit">Sign in</button>
+      </form>
+      <p class="muted-note">No account yet? <a href="/register"><strong>Create one →</strong></a></p>
+      <p class="muted-note small">Demo: <code>demo</code> / <code>demo1234</code></p>
+    </div>
+
+    <div class="card dark">
+      <span class="serif" style="font-style:italic;color:var(--accent);">— Members only</span>
+      <h2>The little luxuries.</h2>
+      <ul style="padding-left:20px;line-height:2.1;color:rgba(246,243,236,.85);">
+        <li>Order history at your fingertips</li>
+        <li>Faster, friction-free checkout</li>
+        <li>Early access to new drops</li>
+        <li>Personalised recommendations</li>
+      </ul>
+      <a class="btn btn-outline" style="color:var(--bg);border-color:rgba(246,243,236,.4);" href="/register">Create account <span class="arrow">→</span></a>
+    </div>
+  </div>
+</div>
+
+<div id="footer-slot"></div>
+<script src="/js/app.js"></script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  try {
+    await api('/api/auth/login', { method: 'POST', body: JSON.stringify(Object.fromEntries(fd)) });
+    const next = new URL(location.href).searchParams.get('next') || '/account';
+    location.href = next;
+  } catch (err) {
+    const el = document.getElementById('err');
+    el.textContent = err.message; el.style.display = 'block';
+  }
+});
+</script>
+</body>
+</html>
