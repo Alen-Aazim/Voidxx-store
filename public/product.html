@@ -6,15 +6,19 @@
 <title>Product — Voidxx</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" type="image/png" href="/images/voidxx-mark.png">
 </head>
 <body>
 <div id="header-slot"></div>
 
 <div class="container">
+  <div class="page-intro" style="padding-bottom:18px;">
+    <span class="crumb">— Product</span>
+  </div>
   <div class="product-detail" id="pdRoot">
-    <div class="muted">Loading…</div>
+    <div class="muted" style="padding:30px;">Loading…</div>
   </div>
 </div>
 
@@ -22,9 +26,19 @@
 <script src="/js/app.js"></script>
 <script>
 let qty = 1;
+let selectedSize = null;
 
 function render(p) {
   const save = (p.competitor_price && p.competitor_price > p.price) ? p.competitor_price - p.price : 0;
+  const sizes = (p.sizes || '').split(',').map(s => s.trim()).filter(Boolean);
+  const sizesHtml = sizes.length ? `
+    <div>
+      <strong style="font-family:var(--mono);font-weight:700;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);display:block;margin-bottom:6px;">Pick a size</strong>
+      <div class="size-row">
+        ${sizes.map(s => `<button type="button" class="size-pill" data-size="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}
+      </div>
+    </div>` : '';
+
   document.getElementById('pdRoot').innerHTML = `
     <div class="pd-thumb">${img(p.image, p.name)}</div>
     <div class="pd-info">
@@ -39,8 +53,10 @@ function render(p) {
       <div class="pd-meta">
         <div><strong>Category</strong> ${escapeHtml(p.category)}</div>
         <div><strong>Stock</strong> ${p.stock} units available</div>
+        ${sizes.length ? `<div><strong>Sizes</strong> ${sizes.map(s => escapeHtml(s)).join(' · ')}</div>` : ''}
         <div><strong>Added</strong> ${new Date(p.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric'})}</div>
       </div>
+      ${sizesHtml}
       <div class="qty-row">
         <span class="tiny">Quantity</span>
         <div class="qty-pick">
@@ -54,16 +70,30 @@ function render(p) {
         <a class="btn btn-outline" href="/products">Keep shopping</a>
       </div>
     </div>`;
+
   document.getElementById('qtyUp').onclick   = () => { qty++; document.getElementById('qtyShow').textContent = qty; };
   document.getElementById('qtyDown').onclick = () => { qty = Math.max(1, qty - 1); document.getElementById('qtyShow').textContent = qty; };
+
+  document.querySelectorAll('.size-pill').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('.size-pill').forEach(x => x.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedSize = el.dataset.size;
+    });
+  });
+
   document.getElementById('addBtn').onclick  = async () => {
+    if (sizes.length && !selectedSize) {
+      toast('Pick a size first', 'error');
+      return;
+    }
     try {
       let last;
       for (let i = 0; i < qty; i++) {
         last = await api('/api/cart/add', { method: 'POST', body: JSON.stringify({ productId: p.id }) });
       }
       document.getElementById('cartCount').textContent = last.count;
-      toast(`Added ${qty} × ${p.name}`, 'success');
+      toast(`Added ${qty} × ${p.name}${selectedSize ? ' (' + selectedSize + ')' : ''}`, 'success');
     } catch (e) { toast(e.message, 'error'); }
   };
 }
@@ -76,7 +106,7 @@ document.addEventListener('app-ready', async () => {
     document.title = p.name + ' — Voidxx';
     render(p);
   } catch (e) {
-    document.getElementById('pdRoot').innerHTML = `<p class="muted">${e.message}. <a href="/products">Back to shop</a></p>`;
+    document.getElementById('pdRoot').innerHTML = `<p class="muted" style="padding:30px;">${e.message}. <a href="/products">Back to shop</a></p>`;
   }
 });
 </script>

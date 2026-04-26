@@ -6,8 +6,9 @@
 <title>All Orders — Voidxx Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" type="image/png" href="/images/voidxx-mark.png">
 </head>
 <body>
 <div id="header-slot"></div>
@@ -19,8 +20,8 @@
       <div class="page-intro" style="text-align:left;padding-top:0;display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:14px;">
         <div>
           <span class="crumb">— Orders</span>
-          <h1>All orders</h1>
-          <p class="muted">Every order placed through the store.</p>
+          <h1>All orders.</h1>
+          <p class="muted">Every order placed through the store, with shipping details.</p>
         </div>
         <a class="btn btn-accent" href="/admin/add-order">+ Add order to user</a>
       </div>
@@ -34,6 +35,17 @@
 <script src="/js/admin.js"></script>
 <script>
 const STATUSES = ['Processing', 'Shipped', 'Delivered', 'Cancelled'];
+
+function shippingHtml(o) {
+  if (!o.shipping_name) return '<p class="muted small" style="margin-top:10px;">No shipping address (admin-placed order).</p>';
+  return `
+    <div class="shipping-block">
+      <strong>Ship to</strong>
+      <div class="ship-line">${escapeHtml(o.shipping_name)} · <span style="font-family:var(--mono);font-weight:700;">${escapeHtml(o.shipping_phone)}</span></div>
+      <div class="ship-line" style="margin-top:4px;">${escapeHtml(o.shipping_address)}</div>
+      <div class="ship-line" style="margin-top:2px;">${escapeHtml(o.shipping_city)}, ${escapeHtml(o.shipping_district)} — <strong style="font-family:var(--mono);">${escapeHtml(o.shipping_pincode)}</strong></div>
+    </div>`;
+}
 
 async function refresh() {
   const orders = await api('/api/admin/orders');
@@ -56,7 +68,7 @@ async function refresh() {
           <select class="select" data-status="${o.id}" style="width:auto;display:inline-block;">
             ${STATUSES.map(s => `<option ${s===o.status?'selected':''}>${s}</option>`).join('')}
           </select>
-          <div style="margin-top:8px;font-weight:600;font-size:1.1rem;">${fmt(o.total)}</div>
+          <div style="margin-top:8px;font-family:var(--display);font-size:1.3rem;">${fmt(o.total)}</div>
         </div>
       </div>
       <div class="order-items">
@@ -65,10 +77,11 @@ async function refresh() {
             <span class="name">${escapeHtml(it.product_name)}</span>
             <span class="qty">×${it.quantity}</span>
             <span class="each">${fmt(it.unit_price)} ea.</span>
-            <span>${fmt(it.unit_price * it.quantity)}</span>
+            <span style="font-family:var(--display);">${fmt(it.unit_price * it.quantity)}</span>
           </div>`).join('')}
       </div>
-      ${o.note ? `<p class="muted small" style="margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;"><strong>Note:</strong> ${escapeHtml(o.note)}</p>` : ''}
+      ${shippingHtml(o)}
+      ${o.note ? `<p class="muted small" style="margin-top:12px;border-top:2px dashed var(--ink);padding-top:10px;"><strong>Note:</strong> ${escapeHtml(o.note)}</p>` : ''}
     </div>`).join('');
 }
 

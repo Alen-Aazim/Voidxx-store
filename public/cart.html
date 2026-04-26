@@ -6,8 +6,9 @@
 <title>Your Bag — Voidxx</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" type="image/png" href="/images/voidxx-mark.png">
 </head>
 <body>
 <div id="header-slot"></div>
@@ -15,7 +16,7 @@
 <div class="container">
   <div class="page-intro">
     <span class="crumb">— Your Bag</span>
-    <h1>Cart</h1>
+    <h1>Cart.</h1>
     <p id="cartSummary" class="muted">Loading your bag…</p>
   </div>
   <div id="cartArea"></div>
@@ -24,8 +25,11 @@
 <div id="footer-slot"></div>
 <script src="/js/app.js"></script>
 <script>
+let CART_DATA = null;
+
 async function refresh() {
   const data = await api('/api/cart');
+  CART_DATA = data;
   document.getElementById('cartCount').textContent = data.count;
   document.getElementById('cartSummary').textContent = data.count
     ? `${data.count} item${data.count === 1 ? '' : 's'} in your bag.`
@@ -57,19 +61,60 @@ async function refresh() {
           <button class="btn btn-ghost btn-sm" data-act="rm" data-id="${p.id}">Remove</button>
         </div>
       </div>
-      <div style="text-align:right;font-weight:600;">${fmt(line)}</div>
+      <div style="text-align:right;font-family:var(--display);font-size:1.1rem;">${fmt(line)}</div>
     </div>`).join('');
+
+  const signedIn = !!window.__me?.user;
+  const shippingForm = signedIn ? `
+    <div class="card" style="margin-top:18px;">
+      <h3 style="margin:0 0 6px;">Shipping details</h3>
+      <p class="muted small" style="margin-bottom:18px;">Where should we send your order?</p>
+      <form class="checkout-form" id="shippingForm">
+        <div class="field">
+          <label class="label">Full name</label>
+          <input class="input" name="name" required placeholder="As on your ID">
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label class="label">Phone number</label>
+            <input class="input" name="phone" required inputmode="tel" placeholder="+91 9XXXX XXXXX">
+          </div>
+          <div class="field">
+            <label class="label">Pincode</label>
+            <input class="input" name="pincode" required inputmode="numeric" maxlength="6" placeholder="6 digits">
+          </div>
+        </div>
+        <div class="field">
+          <label class="label">Address</label>
+          <textarea class="textarea" name="address" required placeholder="House / flat number, street, area" style="min-height:80px;"></textarea>
+        </div>
+        <div class="row-2">
+          <div class="field">
+            <label class="label">City</label>
+            <input class="input" name="city" required placeholder="e.g. Mumbai">
+          </div>
+          <div class="field">
+            <label class="label">District</label>
+            <input class="input" name="district" required placeholder="e.g. Mumbai Suburban">
+          </div>
+        </div>
+      </form>
+    </div>` : '';
 
   document.getElementById('cartArea').innerHTML = `
     <div class="cart-grid">
-      <div class="cart-list">${list}</div>
+      <div>
+        <div class="cart-list">${list}</div>
+        ${shippingForm}
+      </div>
       <aside class="cart-side">
-        <h3 class="serif" style="font-weight:400;font-size:1.4rem;">Order summary</h3>
+        <h3>Order summary</h3>
         <div class="row"><span>Subtotal</span><span>${fmt(data.total)}</span></div>
-        <div class="row"><span>Shipping</span><span class="muted">Calculated at next step</span></div>
+        <div class="row"><span>Shipping</span><span class="muted">${data.total >= 2000 ? 'Free' : 'Calculated next'}</span></div>
         <div class="row total"><span>Total</span><span>${fmt(data.total)}</span></div>
-        <button class="btn btn-accent" id="checkoutBtn">${window.__me?.user ? 'Place order' : 'Sign in to checkout'} <span class="arrow">→</span></button>
-        <button class="btn btn-ghost" id="clearBtn" style="margin-top:10px;">Clear bag</button>
+        <button class="btn btn-accent" id="checkoutBtn">${signedIn ? 'Place order' : 'Sign in to checkout'} <span class="arrow">→</span></button>
+        <button class="btn btn-ghost" id="clearBtn">Clear bag</button>
+        ${signedIn ? '<p class="small muted" style="margin:14px 0 0;color:rgba(255,255,255,.55);">Cash on delivery available across India.</p>' : ''}
       </aside>
     </div>`;
 }
@@ -98,10 +143,15 @@ document.addEventListener('click', async (e) => {
   }
   if (t.id === 'checkoutBtn' || t.parentElement?.id === 'checkoutBtn') {
     if (!window.__me?.user) { location.href = '/login?next=/cart'; return; }
+    const form = document.getElementById('shippingForm');
+    if (!form) return;
+    if (!form.reportValidity()) { form.scrollIntoView({ behavior:'smooth', block:'center' }); return; }
+    const fd = new FormData(form);
+    const payload = Object.fromEntries(fd.entries());
     try {
-      const r = await api('/api/orders/checkout', { method: 'POST' });
+      const r = await api('/api/orders/checkout', { method: 'POST', body: JSON.stringify(payload) });
       toast('Order #' + r.orderId + ' placed!', 'success');
-      setTimeout(() => location.href = '/orders', 600);
+      setTimeout(() => location.href = '/orders', 700);
     } catch (e) { toast(e.message, 'error'); }
   }
 });

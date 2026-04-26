@@ -185,16 +185,42 @@ app.post('/api/orders/checkout', requireUser, (req, res) => {
   const cart = getCart(req);
   const ids = Object.keys(cart).map(Number);
   if (!ids.length) return res.status(400).json({ error: 'Your cart is empty.' });
+
+  const ship = req.body || {};
+  const required = ['name', 'phone', 'address', 'city', 'district', 'pincode'];
+  for (const k of required) {
+    if (!ship[k] || String(ship[k]).trim().length < 2) {
+      return res.status(400).json({ error: `Please enter your ${k}.` });
+    }
+  }
+  if (!/^\d{6}$/.test(String(ship.pincode).trim())) {
+    return res.status(400).json({ error: 'Pincode must be 6 digits.' });
+  }
+  if (!/^\+?[\d\s-]{8,15}$/.test(String(ship.phone).trim())) {
+    return res.status(400).json({ error: 'Please enter a valid phone number.' });
+  }
+
   const placeholders = ids.map(() => '?').join(',');
   const rows = db.prepare(`SELECT * FROM products WHERE id IN (${placeholders})`).all(...ids);
   let total = 0;
   rows.forEach(r => { total += r.price * cart[r.id]; });
 
   const tx = db.transaction(() => {
-    const ord = db.prepare("INSERT INTO orders (user_id, total, status, placed_by) VALUES (?, ?, 'Processing', 'user')")
-      .run(req.session.userId, total);
-    const itemStmt = db.prepare('INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity) VALUES (?, ?, ?, ?, ?)');
-    rows.forEach(r => itemStmt.run(ord.lastInsertRowid, r.id, r.name, r.price, cart[r.id]));
+    const ord = db.prepare(
+      `INSERT INTO orders (user_id, total, status, placed_by,
+         shipping_name, shipping_phone, shipping_address, shipping_city, shipping_district, shipping_pincode)
+       VALUES (?, ?, 'Processing', 'user', ?, ?, ?, ?, ?, ?)`
+    ).run(
+      req.session.userId, total,
+      String(ship.name).trim(),
+      String(ship.phone).trim(),
+      String(ship.address).trim(),
+      String(ship.city).trim(),
+      String(ship.district).trim(),
+      String(ship.pincode).trim()
+    );
+    const itemStmt = db.prepare('INSERT INTO order_items (order_id, product_id, product_name, unit_price, quantity, size) VALUES (?, ?, ?, ?, ?, ?)');
+    rows.forEach(r => itemStmt.run(ord.lastInsertRowid, r.id, r.name, r.price, cart[r.id], null));
     return ord.lastInsertRowid;
   });
   const orderId = tx();
@@ -229,11 +255,20 @@ app.post('/api/admin/logout', (req, res) => {
 // =========================================================
 //  ADMIN — products
 // =========================================================
+function cleanSizes(input) {
+  if (!input) return '';
+  return String(input)
+    .split(/[,\n]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+    .join(',');
+}
+
 app.post('/api/admin/products', requireAdmin, upload.single('image'), (req, res) => {
-  const { name, description, price, competitor_price, category, stock, image_url } = req.body;
+  const { name, description, price, competitor_price, category, stock, image_url, sizes } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : (image_url || null);
   const info = db.prepare(
-    'INSERT INTO products (name, description, price, competitor_price, image, category, stock) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    'INSERT INTO products (name, description, price, competitor_price, image, category, stock, sizes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   ).run(
     name?.trim() || 'Untitled',
     description || '',
@@ -241,7 +276,8 @@ app.post('/api/admin/products', requireAdmin, upload.single('image'), (req, res)
     competitor_price ? Number(competitor_price) : null,
     image,
     category?.trim() || 'General',
-    Number(stock) || 0
+    Number(stock) || 0,
+    cleanSizes(sizes)
   );
   res.json({ ok: true, id: info.lastInsertRowid });
 });
@@ -250,10 +286,10 @@ app.patch('/api/admin/products/:id', requireAdmin, upload.single('image'), (req,
   const id = Number(req.params.id);
   const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Not found' });
-  const { name, description, price, competitor_price, category, stock, image_url } = req.body;
+  const { name, description, price, competitor_price, category, stock, image_url, sizes } = req.body;
   const image = req.file ? `/uploads/${req.file.filename}` : (image_url || existing.image);
   db.prepare(
-    'UPDATE products SET name = ?, description = ?, price = ?, competitor_price = ?, image = ?, category = ?, stock = ? WHERE id = ?'
+    'UPDATE products SET name = ?, description = ?, price = ?, competitor_price = ?, image = ?, category = ?, stock = ?, sizes = ? WHERE id = ?'
   ).run(
     name?.trim() || existing.name,
     description ?? existing.description,
@@ -262,6 +298,7 @@ app.patch('/api/admin/products/:id', requireAdmin, upload.single('image'), (req,
     image,
     category?.trim() || existing.category,
     stock !== undefined ? Number(stock) : existing.stock,
+    sizes !== undefined ? cleanSizes(sizes) : (existing.sizes || ''),
     id
   );
   res.json({ ok: true });

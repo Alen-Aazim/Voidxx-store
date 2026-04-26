@@ -6,8 +6,9 @@
 <title>Orders — Voidxx</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" type="image/png" href="/images/voidxx-mark.png">
 </head>
 <body>
 <div id="header-slot"></div>
@@ -15,15 +16,26 @@
 <div class="container">
   <div class="page-intro" style="text-align:left;">
     <span class="crumb">— Order history</span>
-    <h1>Your orders</h1>
+    <h1>Your orders.</h1>
     <p class="muted">A complete record of everything you've ordered with Voidxx.</p>
   </div>
   <div id="ordersArea"></div>
 </div>
 
-<div id="footer-slot" style="margin-top:80px;"></div>
+<div id="footer-slot" style="margin-top:60px;"></div>
 <script src="/js/app.js"></script>
 <script>
+function shippingHtml(o) {
+  if (!o.shipping_name) return '';
+  return `
+    <div class="shipping-block">
+      <strong>Ship to</strong>
+      <div class="ship-line">${escapeHtml(o.shipping_name)} · <span style="font-family:var(--mono);font-weight:700;">${escapeHtml(o.shipping_phone)}</span></div>
+      <div class="ship-line" style="margin-top:4px;">${escapeHtml(o.shipping_address)}</div>
+      <div class="ship-line" style="margin-top:2px;">${escapeHtml(o.shipping_city)}, ${escapeHtml(o.shipping_district)} — <strong style="font-family:var(--mono);">${escapeHtml(o.shipping_pincode)}</strong></div>
+    </div>`;
+}
+
 document.addEventListener('app-ready', async (e) => {
   if (!e.detail?.user) return location.href = '/login?next=/orders';
   const orders = await api('/api/orders');
@@ -49,7 +61,7 @@ document.addEventListener('app-ready', async (e) => {
         </div>
         <div style="text-align:right;">
           <span class="badge ${o.status.toLowerCase()}">${o.status}</span>
-          <div style="margin-top:6px;font-weight:600;font-size:1.15rem;">${fmt(o.total)}</div>
+          <div style="margin-top:8px;font-family:var(--display);font-size:1.3rem;">${fmt(o.total)}</div>
         </div>
       </div>
       <div class="order-items">
@@ -58,10 +70,11 @@ document.addEventListener('app-ready', async (e) => {
             <span class="name">${escapeHtml(it.product_name)}</span>
             <span class="qty">×${it.quantity}</span>
             <span class="each">${fmt(it.unit_price)} ea.</span>
-            <span>${fmt(it.unit_price * it.quantity)}</span>
+            <span style="font-family:var(--display);">${fmt(it.unit_price * it.quantity)}</span>
           </div>`).join('')}
       </div>
-      ${o.note ? `<p class="muted small" style="margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;"><strong>Note:</strong> ${escapeHtml(o.note)}</p>` : ''}
+      ${shippingHtml(o)}
+      ${o.note ? `<p class="muted small" style="margin-top:12px;border-top:2px dashed var(--ink);padding-top:10px;"><strong>Note:</strong> ${escapeHtml(o.note)}</p>` : ''}
     </div>`).join('');
 });
 </script>

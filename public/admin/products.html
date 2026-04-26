@@ -6,8 +6,9 @@
 <title>Products — Voidxx Admin</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Inter:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
+<link rel="icon" type="image/png" href="/images/voidxx-mark.png">
 </head>
 <body>
 <div id="header-slot"></div>
@@ -19,8 +20,8 @@
       <div class="page-intro" style="text-align:left;padding-top:0;display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:14px;">
         <div>
           <span class="crumb">— Catalog</span>
-          <h1>Products</h1>
-          <p class="muted">Manage your catalog.</p>
+          <h1>Products.</h1>
+          <p class="muted">Manage your catalog. Categories: Jackets, Tees, Pants, Shorts.</p>
         </div>
         <button class="btn btn-accent" id="newBtn">+ New product</button>
       </div>
@@ -37,10 +38,17 @@
 <script>
 let editingId = null;
 
+const SIZE_PRESETS = {
+  Jackets: 'S, M, L, XL',
+  Tees:    'XS, S, M, L, XL, XXL',
+  Pants:   '28, 30, 32, 34, 36',
+  Shorts:  'S, M, L, XL'
+};
+
 function productForm(p = {}) {
   return `
     <form class="card" id="pForm">
-      <h3 class="serif" style="font-weight:400;font-size:1.4rem;">${p.id ? 'Edit product' : 'New product'}</h3>
+      <h3>${p.id ? 'Edit product' : 'New product'}</h3>
       <div class="field">
         <label class="label">Name</label>
         <input class="input" name="name" value="${escapeHtml(p.name || '')}" required>
@@ -52,8 +60,18 @@ function productForm(p = {}) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="field"><label class="label">Price (₹)</label><input class="input" type="number" step="0.01" name="price" value="${p.price ?? ''}" required></div>
         <div class="field"><label class="label">Competitor price (₹)</label><input class="input" type="number" step="0.01" name="competitor_price" value="${p.competitor_price ?? ''}"></div>
-        <div class="field"><label class="label">Category</label><input class="input" name="category" value="${escapeHtml(p.category || '')}" placeholder="e.g. Outerwear"></div>
+        <div class="field">
+          <label class="label">Category</label>
+          <select class="select" name="category" id="catSelect">
+            ${['Jackets','Tees','Pants','Shorts'].map(c => `<option ${ (p.category || 'Jackets') === c ? 'selected' : ''}>${c}</option>`).join('')}
+          </select>
+        </div>
         <div class="field"><label class="label">Stock</label><input class="input" type="number" name="stock" value="${p.stock ?? 50}"></div>
+      </div>
+      <div class="field">
+        <label class="label">Sizes available</label>
+        <input class="input" name="sizes" id="sizesInput" value="${escapeHtml(p.sizes || '')}" placeholder="e.g. S, M, L, XL">
+        <p class="small muted" style="margin:6px 0 0;">Comma-separated. <a href="#" id="presetLink" style="color:var(--red);text-decoration:underline;">Use preset for category</a></p>
       </div>
       <div class="field">
         <label class="label">Image URL (or upload below)</label>
@@ -74,23 +92,41 @@ async function refresh() {
   const items = await api('/api/products');
   document.getElementById('tableArea').innerHTML = `
     <table class="table">
-      <thead><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Was</th><th>Stock</th><th></th></tr></thead>
+      <thead><tr><th></th><th>Name</th><th>Category</th><th>Sizes</th><th>Price</th><th>Was</th><th>Stock</th><th></th></tr></thead>
       <tbody>
         ${items.map(p => `
           <tr>
-            <td><div style="width:48px;height:60px;border-radius:6px;overflow:hidden;background:var(--bg-2);">${img(p.image, p.name)}</div></td>
-            <td><strong>${escapeHtml(p.name)}</strong></td>
-            <td class="muted small">${escapeHtml(p.category)}</td>
+            <td><div style="width:48px;height:60px;border-radius:8px;overflow:hidden;border:2px solid var(--ink);background:var(--cream);">${img(p.image, p.name)}</div></td>
+            <td><strong style="font-family:var(--display);font-size:1rem;">${escapeHtml(p.name)}</strong></td>
+            <td><span class="badge info">${escapeHtml(p.category)}</span></td>
+            <td class="small" style="color:var(--ink-soft);font-family:var(--mono);font-weight:700;">${escapeHtml(p.sizes || '—')}</td>
             <td>${fmt(p.price)}</td>
             <td class="muted">${p.competitor_price ? fmt(p.competitor_price) : '—'}</td>
             <td>${p.stock}</td>
             <td class="right">
               <button class="btn btn-sm btn-ghost" data-edit="${p.id}">Edit</button>
-              <button class="btn btn-sm btn-ghost" data-del="${p.id}" style="color:var(--error);">Delete</button>
+              <button class="btn btn-sm btn-ghost" data-del="${p.id}" style="color:var(--red);border-color:var(--red);box-shadow:2px 2px 0 var(--red);">Delete</button>
             </td>
           </tr>`).join('')}
       </tbody>
     </table>`;
+}
+
+function attachFormHelpers(prefill = {}) {
+  const presetLink = document.getElementById('presetLink');
+  const catSel     = document.getElementById('catSelect');
+  const sizesIn    = document.getElementById('sizesInput');
+  if (!presetLink || !catSel || !sizesIn) return;
+  presetLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    sizesIn.value = SIZE_PRESETS[catSel.value] || '';
+  });
+  // For new products without a sizes value yet, prefill on category change
+  catSel.addEventListener('change', () => {
+    if (!sizesIn.value.trim() || sizesIn.value.trim() === (SIZE_PRESETS[prefill.category] || '')) {
+      sizesIn.value = SIZE_PRESETS[catSel.value] || '';
+    }
+  });
 }
 
 document.addEventListener('click', async (e) => {
@@ -98,6 +134,11 @@ document.addEventListener('click', async (e) => {
     editingId = null;
     document.getElementById('formArea').innerHTML = productForm();
     document.getElementById('formArea').style.display = 'block';
+    // Default sizes for default category
+    const sizesIn = document.getElementById('sizesInput');
+    const catSel  = document.getElementById('catSelect');
+    if (sizesIn && !sizesIn.value && catSel) sizesIn.value = SIZE_PRESETS[catSel.value] || '';
+    attachFormHelpers({});
   }
   if (e.target.id === 'cancelBtn') {
     document.getElementById('formArea').style.display = 'none';
@@ -110,6 +151,7 @@ document.addEventListener('click', async (e) => {
     document.getElementById('formArea').innerHTML = productForm(p);
     document.getElementById('formArea').style.display = 'block';
     document.getElementById('formArea').scrollIntoView({ behavior: 'smooth' });
+    attachFormHelpers(p);
   }
   const dl = e.target.closest('[data-del]');
   if (dl && confirm('Delete this product?')) {

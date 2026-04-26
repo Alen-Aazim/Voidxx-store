@@ -24,7 +24,7 @@ function toast(msg, type = '') {
   t.className = 'toast ' + type;
   t.textContent = msg;
   wrap.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .25s ease'; }, 2400);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .25s ease, transform .25s ease'; t.style.transform = 'scale(.85) rotate(2deg)'; }, 2400);
   setTimeout(() => t.remove(), 2700);
 }
 
@@ -32,7 +32,6 @@ function buildHeader(me) {
   const path = location.pathname.replace(/\/$/, '') || '/';
   const cat  = new URL(location.href).searchParams.get('cat');
   const isCat = (c) => path === '/products' && cat === c ? 'class="active"' : '';
-  const isPath = (p) => path === p ? 'class="active"' : '';
   const userActions = me?.user
     ? `
       <a href="/orders">Orders</a>
@@ -42,7 +41,7 @@ function buildHeader(me) {
       <a href="/login">Sign in</a>
       <a href="/admin">Admin</a>`;
   return `
-    <div class="bar">Free shipping over ₹2,000 · <a href="/products">Shop the new drop →</a></div>
+    <div class="bar">FREE SHIPPING OVER ₹2,000 · <a href="/products">SHOP THE NEW DROP →</a></div>
     <header class="site-header">
       <div class="header-row">
         <nav class="nav">
@@ -52,7 +51,10 @@ function buildHeader(me) {
           <a href="/products?cat=Shorts"  ${isCat('Shorts')}>Shorts</a>
           <a href="/products" ${path === '/products' && !cat ? 'class="active"' : ''}>All</a>
         </nav>
-        <a class="brand" href="/"><span class="dot"></span>VOIDXX</a>
+        <a class="brand" href="/">
+          <img src="/images/voidxx-mark.png" alt="Voidxx logo">
+          <span class="word">Voidxx</span>
+        </a>
         <div class="nav-actions">
           ${userActions}
           <a class="cart-link" href="/cart">Bag<span class="count" id="cartCount">${me?.cartCount || 0}</span></a>
@@ -67,9 +69,12 @@ function buildFooter() {
       <div class="container">
         <div class="footer-top">
           <div>
-            <div class="brand"><span class="dot"></span>VOIDXX</div>
-            <p style="color: rgba(255,255,255,.7); max-width: 320px; font-size: .9rem;">Four essentials. Built well. Worn often. Skip the rest.</p>
-            <form class="newsletter" onsubmit="event.preventDefault(); window.toast('You\\'re on the list', 'success'); this.reset();">
+            <a class="brand" href="/" style="display:inline-flex;align-items:center;gap:14px;">
+              <img src="/images/voidxx-mark.png" alt="Voidxx logo">
+              <span class="word">Voidxx</span>
+            </a>
+            <p style="color: rgba(255,255,255,.7); max-width: 320px; font-size: .92rem; margin-top: 14px; font-weight: 500;">Four essentials. Built well. Worn often. Skip the rest.</p>
+            <form class="newsletter" onsubmit="event.preventDefault(); window.toast('You\\'re on the list!', 'success'); this.reset();">
               <input type="email" required placeholder="Email for new drops">
               <button>Join</button>
             </form>
@@ -98,7 +103,7 @@ function buildFooter() {
         </div>
         <div class="footer-bottom">
           <span>© ${new Date().getFullYear()} Voidxx</span>
-          <span>Built sharp.</span>
+          <span>Made loud.</span>
         </div>
       </div>
     </footer>`;
@@ -110,9 +115,9 @@ function escapeHtml(str) {
 
 const PLACEHOLDER_IMG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'>
-  <rect width='400' height='500' fill='#000000'/>
-  <text x='200' y='240' font-family='Helvetica, Arial, sans-serif' font-weight='700' font-size='56' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>VOIDXX</text>
-  <text x='200' y='275' font-family='Helvetica, Arial, sans-serif' font-size='10' letter-spacing='6' fill='rgba(255,255,255,.6)' text-anchor='middle'>NO IMAGE</text>
+  <rect width='400' height='500' fill='#ed2129'/>
+  <text x='200' y='240' font-family='Helvetica, Arial, sans-serif' font-weight='900' font-size='56' fill='#ffffff' stroke='#0a0a0a' stroke-width='2' text-anchor='middle' letter-spacing='-2'>VOIDXX</text>
+  <text x='200' y='275' font-family='Helvetica, Arial, sans-serif' font-size='10' letter-spacing='6' fill='rgba(255,255,255,.85)' text-anchor='middle'>NO IMAGE</text>
 </svg>`)}`;
 
 function img(src, alt = '') {
@@ -146,7 +151,7 @@ async function addToCart(productId) {
   try {
     const r = await api('/api/cart/add', { method: 'POST', body: JSON.stringify({ productId }) });
     document.getElementById('cartCount').textContent = r.count;
-    toast('Added to bag', 'success');
+    toast('Added to bag!', 'success');
   } catch (e) {
     toast(e.message, 'error');
   }
@@ -165,7 +170,7 @@ document.addEventListener('click', async (e) => {
   }
 });
 
-// Init: inject header/footer everywhere
+// expose helpers
 window.toast = toast;
 window.api = api;
 window.fmt = fmt;
