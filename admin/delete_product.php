@@ -1,11 +1,9 @@
 <?php
-require "_auth.php";
-require "../db.php";
-
-$id = $_GET['id'];
-
+require '_auth.php';
+require '../db.php';
+require_once '../_helpers.php';
+$id = intval($_GET['id'] ?? 0);
 $stmt = $pdo->prepare("DELETE FROM products WHERE id=?");
 $stmt->execute([$id]);
-
-header("Location: products.php");
-exit;
+flash_set('info', 'Product deleted.');
+header("Location: products.php"); exit;
