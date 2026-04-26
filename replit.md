@@ -46,6 +46,10 @@ public/
 
 Every page uses two slots — `<div id="header-slot"></div>` and `<div id="footer-slot"></div>`. `app.js` fetches `/api/me`, injects the header/footer, and dispatches an `app-ready` CustomEvent so per-page scripts can render once auth state is known.
 
+## Catalog scope
+
+The store carries exactly four categories: **Jackets, Tees, Pants, Shorts**. The canonical list lives in `db.js` (`CATEGORIES` export) and is hardcoded in the header/footer/products page chip order.
+
 ## Default credentials
 
 - **Customer:** `demo` / `demo1234`

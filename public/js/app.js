@@ -30,30 +30,32 @@ function toast(msg, type = '') {
 
 function buildHeader(me) {
   const path = location.pathname.replace(/\/$/, '') || '/';
-  const isActive = (p) => path === p ? 'class="active"' : '';
+  const cat  = new URL(location.href).searchParams.get('cat');
+  const isCat = (c) => path === '/products' && cat === c ? 'class="active"' : '';
+  const isPath = (p) => path === p ? 'class="active"' : '';
   const userActions = me?.user
     ? `
       <a href="/orders">Orders</a>
-      <a href="/account">Hi, ${escapeHtml((me.user.full_name || me.user.username).split(' ')[0])}</a>
+      <a href="/account">${escapeHtml((me.user.full_name || me.user.username).split(' ')[0])}</a>
       <a href="#" id="logoutLink">Logout</a>`
     : `
       <a href="/login">Sign in</a>
-      <a href="/register">Register</a>
       <a href="/admin">Admin</a>`;
   return `
-    <div class="bar">Free shipping on orders over ₹2,000 · <a href="/products">Shop the new collection →</a></div>
+    <div class="bar">Free shipping over ₹2,000 · <a href="/products">Shop the new drop →</a></div>
     <header class="site-header">
       <div class="header-row">
         <nav class="nav">
-          <a href="/products"  ${isActive('/products')}>Shop</a>
-          <a href="/products?cat=Outerwear">Outerwear</a>
-          <a href="/products?cat=Footwear">Footwear</a>
-          <a href="/contact"   ${isActive('/contact')}>Contact</a>
+          <a href="/products?cat=Jackets" ${isCat('Jackets')}>Jackets</a>
+          <a href="/products?cat=Tees"    ${isCat('Tees')}>Tees</a>
+          <a href="/products?cat=Pants"   ${isCat('Pants')}>Pants</a>
+          <a href="/products?cat=Shorts"  ${isCat('Shorts')}>Shorts</a>
+          <a href="/products" ${path === '/products' && !cat ? 'class="active"' : ''}>All</a>
         </nav>
-        <a class="brand" href="/">VOID<span>X</span>X</a>
+        <a class="brand" href="/"><span class="dot"></span>VOIDXX</a>
         <div class="nav-actions">
           ${userActions}
-          <a class="cart-link" href="/cart">Cart<span class="count" id="cartCount">${me?.cartCount || 0}</span></a>
+          <a class="cart-link" href="/cart">Bag<span class="count" id="cartCount">${me?.cartCount || 0}</span></a>
         </div>
       </div>
     </header>`;
@@ -65,19 +67,19 @@ function buildFooter() {
       <div class="container">
         <div class="footer-top">
           <div>
-            <div class="brand">VOID<span>X</span>X</div>
-            <p style="color: rgba(246,243,236,.7); max-width: 320px;">Considered, premium pieces designed to outlast the trends.</p>
-            <form class="newsletter" onsubmit="event.preventDefault(); window.toast('Thanks — you\\'re on the list.', 'success'); this.reset();">
+            <div class="brand"><span class="dot"></span>VOIDXX</div>
+            <p style="color: rgba(255,255,255,.7); max-width: 320px; font-size: .9rem;">Four essentials. Built well. Worn often. Skip the rest.</p>
+            <form class="newsletter" onsubmit="event.preventDefault(); window.toast('You\\'re on the list', 'success'); this.reset();">
               <input type="email" required placeholder="Email for new drops">
               <button>Join</button>
             </form>
           </div>
           <div>
             <h5>Shop</h5>
-            <a href="/products">All products</a>
-            <a href="/products?cat=Outerwear">Outerwear</a>
-            <a href="/products?cat=Footwear">Footwear</a>
-            <a href="/products?cat=Accessories">Accessories</a>
+            <a href="/products?cat=Jackets">Jackets</a>
+            <a href="/products?cat=Tees">Tees</a>
+            <a href="/products?cat=Pants">Pants</a>
+            <a href="/products?cat=Shorts">Shorts</a>
           </div>
           <div>
             <h5>Account</h5>
@@ -95,8 +97,8 @@ function buildFooter() {
           </div>
         </div>
         <div class="footer-bottom">
-          <span>© ${new Date().getFullYear()} Voidxx. All rights reserved.</span>
-          <span>Crafted with care.</span>
+          <span>© ${new Date().getFullYear()} Voidxx</span>
+          <span>Built sharp.</span>
         </div>
       </div>
     </footer>`;
@@ -108,15 +110,9 @@ function escapeHtml(str) {
 
 const PLACEHOLDER_IMG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500'>
-  <defs>
-    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
-      <stop offset='0' stop-color='#1c1410'/>
-      <stop offset='1' stop-color='#3d2818'/>
-    </linearGradient>
-  </defs>
-  <rect width='400' height='500' fill='url(#g)'/>
-  <text x='200' y='240' font-family='Georgia, serif' font-size='52' fill='rgba(255,255,255,.9)' text-anchor='middle'>VOIDXX</text>
-  <text x='200' y='275' font-family='Inter, sans-serif' font-size='12' letter-spacing='6' fill='rgba(184,137,90,.9)' text-anchor='middle'>PREMIUM CLOTHING</text>
+  <rect width='400' height='500' fill='#000000'/>
+  <text x='200' y='240' font-family='Helvetica, Arial, sans-serif' font-weight='700' font-size='56' fill='#ffffff' text-anchor='middle' letter-spacing='-2'>VOIDXX</text>
+  <text x='200' y='275' font-family='Helvetica, Arial, sans-serif' font-size='10' letter-spacing='6' fill='rgba(255,255,255,.6)' text-anchor='middle'>NO IMAGE</text>
 </svg>`)}`;
 
 function img(src, alt = '') {
@@ -124,8 +120,7 @@ function img(src, alt = '') {
 }
 
 function productCardHtml(p, opts = {}) {
-  const save = (p.competitor_price && p.competitor_price > p.price)
-    ? p.competitor_price - p.price : 0;
+  const save = (p.competitor_price && p.competitor_price > p.price) ? p.competitor_price - p.price : 0;
   const tag = save > 0
     ? `<div class="tag deal">Save ${fmt(save)}</div>`
     : (opts.newTag ? `<div class="tag">New</div>` : '');
@@ -142,7 +137,6 @@ function productCardHtml(p, opts = {}) {
         <div class="price-row">
           <span class="price">${fmt(p.price)}</span>
           ${p.competitor_price ? `<span class="strike">${fmt(p.competitor_price)}</span>` : ''}
-          ${save > 0 ? `<span class="save">−${fmt(save)}</span>` : ''}
         </div>
       </div>
     </article>`;
@@ -152,7 +146,7 @@ async function addToCart(productId) {
   try {
     const r = await api('/api/cart/add', { method: 'POST', body: JSON.stringify({ productId }) });
     document.getElementById('cartCount').textContent = r.count;
-    toast('Added to cart', 'success');
+    toast('Added to bag', 'success');
   } catch (e) {
     toast(e.message, 'error');
   }

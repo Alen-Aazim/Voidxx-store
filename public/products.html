@@ -6,7 +6,7 @@
 <title>Shop — Voidxx</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
@@ -14,32 +14,39 @@
 
 <div class="container">
   <div class="page-intro">
-    <span class="crumb">— The Shop</span>
-    <h1>Every piece, in one place</h1>
-    <p>Filter by category, or scroll the whole catalog. Each piece is designed in-house and made to last.</p>
+    <span class="crumb">The Shop</span>
+    <h1 id="pageTitle">All four, in one place.</h1>
+    <p id="pageSub">Filter by category, or scroll the lot. Every piece is built to last.</p>
   </div>
 
   <div class="chips" id="chips"></div>
-  <div class="grid" id="grid"></div>
+  <div class="grid" id="grid" style="border-top: 0;"></div>
 </div>
 
-<div id="footer-slot" style="margin-top:80px;"></div>
+<div id="footer-slot" style="margin-top: 80px;"></div>
 <script src="/js/app.js"></script>
 <script>
+const CATS = ['Jackets', 'Tees', 'Pants', 'Shorts'];
 document.addEventListener('app-ready', async () => {
   const url = new URL(location.href);
   const activeCat = url.searchParams.get('cat') || '';
-  const data = await api('/api/products/featured');
-  const cats = ['', ...data.cats];
-  document.getElementById('chips').innerHTML = cats.map(c => `
-    <a class="chip ${c === activeCat ? 'active' : ''}" href="/products${c ? '?cat=' + encodeURIComponent(c) : ''}">${c || 'All'}</a>
-  `).join('');
+
+  document.getElementById('chips').innerHTML = `
+    <a class="chip ${!activeCat ? 'active' : ''}" href="/products">All</a>
+    ${CATS.map(c => `<a class="chip ${c === activeCat ? 'active' : ''}" href="/products?cat=${encodeURIComponent(c)}">${c}</a>`).join('')}
+  `;
+
+  if (activeCat) {
+    document.getElementById('pageTitle').textContent = activeCat + '.';
+    document.getElementById('pageSub').textContent = `Every ${activeCat.toLowerCase().replace(/s$/, '')} we make.`;
+    document.title = activeCat + ' — Voidxx';
+  }
 
   const products = await api('/api/products' + (activeCat ? '?cat=' + encodeURIComponent(activeCat) : ''));
   const grid = document.getElementById('grid');
   grid.innerHTML = products.length
     ? products.map(p => productCardHtml(p)).join('')
-    : '<p class="muted center" style="grid-column:1/-1;padding:40px 0;">Nothing here yet.</p>';
+    : '<p class="muted center" style="grid-column:1/-1;padding:60px 0;">Nothing here yet.</p>';
 });
 </script>
 </body>

@@ -3,33 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Voidxx — Premium Clothing</title>
+<title>Voidxx — Four Essentials</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/styles.css">
-<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230c0c0d'/><text x='16' y='22' font-family='Georgia' font-size='16' fill='%23b8895a' text-anchor='middle'>V</text></svg>">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23000'/><text x='16' y='22' font-family='Helvetica' font-weight='700' font-size='16' fill='%23fff' text-anchor='middle'>V</text></svg>">
 </head>
 <body>
 <div id="header-slot"></div>
 
 <section class="hero">
   <div class="container">
-    <div>
-      <div class="hero-eyebrow">— Spring Collection 2026</div>
-      <h1>The pieces<br>you'll <em>actually</em> wear.</h1>
-      <p class="lede">Considered, premium clothing made from honest materials. Designed to outlast the trends, priced without the markup.</p>
+    <div class="hero-eyebrow">SS / 26 Drop &nbsp;·&nbsp; Voidxx Studio</div>
+    <h1>FOUR<br>ESSENTIALS.<br><span class="stroke">NOTHING ELSE.</span></h1>
+    <div class="hero-sub">
+      <p>Jackets, Tees, Pants, Shorts. Built once with honest materials and considered cuts. Worn for years.</p>
       <div class="hero-cta">
-        <a class="btn btn-accent" href="/products">Shop the collection <span class="arrow">→</span></a>
-        <a class="btn btn-outline" href="/products?cat=Outerwear">Outerwear</a>
+        <a class="btn btn-accent" href="/products">Shop the lineup <span class="arrow">→</span></a>
+        <a class="btn btn-outline" href="/products?cat=Jackets">Start with Jackets</a>
       </div>
     </div>
-    <div class="hero-figure">
-      <div class="hero-tag">
-        <strong>Camel Wool Overcoat</strong>
-        <span class="muted small">From ₹5,999 · See in shop</span>
-      </div>
-    </div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <span>JACKETS &nbsp; <em class="star">✦</em> &nbsp; TEES &nbsp; <em class="star">✦</em> &nbsp; PANTS &nbsp; <em class="star">✦</em> &nbsp; SHORTS &nbsp; <em class="star">✦</em> &nbsp; SS '26 &nbsp; <em class="star">✦</em> &nbsp; FREE SHIPPING OVER ₹2,000 &nbsp; <em class="star">✦</em> &nbsp;</span>
+    <span>JACKETS &nbsp; <em class="star">✦</em> &nbsp; TEES &nbsp; <em class="star">✦</em> &nbsp; PANTS &nbsp; <em class="star">✦</em> &nbsp; SHORTS &nbsp; <em class="star">✦</em> &nbsp; SS '26 &nbsp; <em class="star">✦</em> &nbsp; FREE SHIPPING OVER ₹2,000 &nbsp; <em class="star">✦</em> &nbsp;</span>
+  </div>
+</div>
+
+<section style="padding: 0;">
+  <div class="cat-grid">
+    <a class="cat-tile" href="/products?cat=Jackets">
+      <img src="https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&q=80" alt="Jackets" loading="lazy">
+      <div class="label"><h3>Jackets</h3><span class="num">/ 01</span></div>
+    </a>
+    <a class="cat-tile" href="/products?cat=Tees">
+      <img src="https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=900&q=80" alt="Tees" loading="lazy">
+      <div class="label"><h3>Tees</h3><span class="num">/ 02</span></div>
+    </a>
+    <a class="cat-tile" href="/products?cat=Pants">
+      <img src="https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=900&q=80" alt="Pants" loading="lazy">
+      <div class="label"><h3>Pants</h3><span class="num">/ 03</span></div>
+    </a>
+    <a class="cat-tile" href="/products?cat=Shorts">
+      <img src="https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=900&q=80" alt="Shorts" loading="lazy">
+      <div class="label"><h3>Shorts</h3><span class="num">/ 04</span></div>
+    </a>
   </div>
 </section>
 
@@ -37,24 +59,24 @@
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— 01 New Arrivals</span>
+        <span class="num">/ 01 — JUST IN</span>
         <h2>This week's drop</h2>
       </div>
-      <a class="link" href="/products">View everything →</a>
+      <a class="link" href="/products">Browse all →</a>
     </div>
     <div class="grid" id="newArrivals"></div>
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
-  <div class="container">
-    <div class="split">
-      <div class="img" style="background-image:linear-gradient(180deg, rgba(0,0,0,.0) 50%, rgba(0,0,0,.3)), url('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80');"></div>
+<section class="section" style="padding: 0; border-bottom: 0;">
+  <div class="container" style="padding: 0;">
+    <div class="split invert">
+      <div class="img" style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80');"></div>
       <div class="body">
-        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— Crafted for longevity</span>
-        <h2>Built once.<br>Worn for years.</h2>
-        <p>We work directly with mills and makers to source materials that age beautifully — and we skip the seasonal markups so you don't pay for them either.</p>
-        <a class="btn btn-outline" href="/products">Browse the catalog <span class="arrow">→</span></a>
+        <span class="num" style="color: rgba(255,255,255,.55);">/ THE STUDIO</span>
+        <h2>Less catalog.<br>More care.</h2>
+        <p>We make four things, on purpose. We know our mills, we know our makers, and we obsess over every panel — so the bomber you buy this year still looks right in five.</p>
+        <a class="btn" style="background: var(--bg); color: var(--ink); border-color: var(--bg);" href="/products">See the lineup <span class="arrow">→</span></a>
       </div>
     </div>
   </div>
@@ -64,8 +86,8 @@
   <div class="container">
     <div class="section-head">
       <div>
-        <span class="serif" style="font-style:italic;color:var(--accent-deep);">— 02 Best Value</span>
-        <h2>Deals worth a closer look</h2>
+        <span class="num">/ 02 — BEST VALUE</span>
+        <h2>Worth a closer look</h2>
       </div>
       <a class="link" href="/products">Shop all →</a>
     </div>
@@ -73,23 +95,23 @@
   </div>
 </section>
 
-<section class="section" style="padding-top:0;">
+<section class="section" style="padding-top: 0;">
   <div class="container">
     <div class="feature-row">
       <div class="feature">
-        <div class="icon">— I.</div>
-        <h4>Premium materials</h4>
-        <p>Italian wool, European linen, Japanese denim. We obsess over fabric so every piece feels right from day one.</p>
+        <div class="icon">/ 01</div>
+        <h4>Heavy fabrics, real weight.</h4>
+        <p>240gsm cotton tees. 14oz selvedge denim. 380gsm fleece. Stuff that holds its shape for years.</p>
       </div>
       <div class="feature">
-        <div class="icon">— II.</div>
-        <h4>Honest pricing</h4>
-        <p>We list competitor prices side-by-side. No phantom discounts, just genuinely better value.</p>
+        <div class="icon">/ 02</div>
+        <h4>Honest pricing, always.</h4>
+        <p>We list what comparable brands charge. No phantom discounts, no seasonal markup games.</p>
       </div>
       <div class="feature">
-        <div class="icon">— III.</div>
-        <h4>Make it personal</h4>
-        <p>Sign in to track orders, save favourites, and check out faster on every visit.</p>
+        <div class="icon">/ 03</div>
+        <h4>Made for the long haul.</h4>
+        <p>Reinforced stitching, replaceable buttons, panels that resist pulling. Built to outlast.</p>
       </div>
     </div>
   </div>
